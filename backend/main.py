@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 
 app = FastAPI()
 
@@ -26,7 +27,7 @@ async def create_user(user: schemas.CreateUser , db: AsyncSession = Depends(get_
     return JSONResponse({'msg':'user created successfully'})
     
 
-@app.get("/users")
+@app.get("/users",response_model=List[schemas.UserResponse])
 async def display_user(db: AsyncSession = Depends(get_db)):
 
     users = await db.execute(select(models.User))
