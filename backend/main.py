@@ -7,8 +7,20 @@ from sqlalchemy import select
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
+from contextlib import asynccontextmanager
+from database import engine
 
-app = FastAPI()
+# This lifecycle block runs automatically the exact millisecond your container starts up
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Automatically triggers a build for any tables defined in your models file
+    async with engine.begin() as conn:
+        await conn.run_sync(models.Base.metadata.create_all)
+    yield
+
+# Pass the lifespan context manager into your main app declaration
+app = FastAPI(lifespan=lifespan)
+# app = FastAPI()
 
 @app.post("/login")
 async def create_user(user: schemas.CreateUser , db: AsyncSession = Depends(get_db)):
