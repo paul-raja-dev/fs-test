@@ -5,17 +5,24 @@ import './App.css';
 function App() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([]); // Base state is a clean array
 
-  // Base URL fallback dynamically checks for the cloud variable or local testing port
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
   const fetchUsers = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/users`);
-      setUsers(response.data);
+      
+      // Defensively check if the response data is actually an array before saving it
+      if (Array.isArray(response.data)) {
+        setUsers(response.data);
+      } else {
+        console.error("API returned data that is not an array:", response.data);
+        setUsers([]); // Fallback to an empty array to prevent map crashes
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch users from API:", error);
+      setUsers([]); // Fallback to safe array on network errors
     }
   };
 
@@ -34,7 +41,7 @@ function App() {
       setPassword('');
       fetchUsers();
     } catch (error) {
-      console.error(error);
+      console.error("Login/Signup error:", error);
     }
   };
 
@@ -60,10 +67,15 @@ function App() {
 
       <div className="user-list">
         <h2>Users</h2>
+        {/* Guard rails: check if users exists and has length before calling map */}
         <ul>
-          {users.map((user) => (
-            <li key={user.id}>{user.username}</li>
-          ))}
+          {Array.isArray(users) && users.length > 0 ? (
+            users.map((user) => (
+              <li key={user.id}>{user.username}</li>
+            ))
+          ) : (
+            <li>No users found or backend loading...</li>
+          )}
         </ul>
       </div>
     </div>
