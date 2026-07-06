@@ -7,9 +7,12 @@ function App() {
   const [password, setPassword] = useState('');
   const [users, setUsers] = useState([]);
 
+  // Base URL fallback dynamically checks for the cloud variable or local testing port
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:8000/users');
+      const response = await axios.get(`${API_BASE_URL}/users`);
       setUsers(response.data);
     } catch (error) {
       console.error(error);
@@ -23,7 +26,7 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://127.0.0.1:8000/login', {
+      await axios.post(`${API_BASE_URL}/login`, {
         username,
         password
       });
