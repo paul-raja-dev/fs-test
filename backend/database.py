@@ -1,17 +1,25 @@
-from sqlalchemy.ext.asyncio import create_async_engine,AsyncSession,async_sessionmaker
+import os
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 
+# 1. Fetch the dynamic variable provided natively by Railway
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
-DATABASE_URL = "postgresql+asyncpg://postgres:paul-dev%400069@db.uferjqmwphjgifdaanmp.supabase.co:5432/postgres"
+# 2. Fix the driver protocol prefix for SQLAlchemy Asyncio if needed
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-
-engine = create_async_engine(DATABASE_URL, echo=True)
+# 3. Spin up the clean engine over the internal cloud network
+engine = create_async_engine(
+    DATABASE_URL, 
+    echo=True,
+    pool_pre_ping=True
+)
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
-    class_= AsyncSession,
-    expire_on_commit= False
+    class_=AsyncSession,
+    expire_on_commit=False
 )
-
 
 async def get_db():
     async with AsyncSessionLocal() as session:
